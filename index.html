@@ -247,13 +247,13 @@
 
 <script>
 // ===== СОСТОЯНИЕ =====
-let totalMs = 0;           // общее время в библиотеке (мс)
-let elapsedMs = 0;         // прошло (мс)
-let currentDurationMs = 0; // длительность текущего таймера
+let totalMs = 0;           
+let elapsedMs = 0;         
+let currentDurationMs = 0; 
 let currentRemainingMs = 0;
 let timerInterval = null;
 let timerRunning = false;
-  let isBreak = false;
+let isBreak = false;
 let currentDoor = null;
 let lastStartTime = 0;
 
@@ -286,8 +286,8 @@ function fmt(ms) {
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
-  if (h > 0) return ${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')};
-  return ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')};
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
 function showScreen(id) {
@@ -304,9 +304,12 @@ function updateProgress() {
 
 // ===== СТАРТ =====
 function startJourney() {
-  const hours = parseFloat(document.getElementById('hours-input').value);
-  if (isNaN(hours)  hours < 0.5  hours > 12) {
-    alert("Введи число от 0.5 до 12 часов!");
+  // ИСПРАВЛЕНИЕ: заменяем запятую на точку, если она есть
+  let val = document.getElementById('hours-input').value.replace(',', '.');
+  const hours = parseFloat(val);
+  
+  if (isNaN(hours) || hours < 0.5 || hours > 12) {
+    alert("Пожалуйста, введи число от 0.5 до 12 часов!");
     return;
   }
   totalMs = hours * 3600 * 1000;
@@ -321,7 +324,6 @@ function renderDoors() {
   const container = document.getElementById('doors-container');
   container.innerHTML = '';
 
-  // Генерируем 3 двери: минимум 2 рабочих, максимум 1 перерыв
   const doors = generateDoors();
 
   doors.forEach((door, i) => {
@@ -339,7 +341,6 @@ function renderDoors() {
   updateProgress();
 }
 
-// Загадочные названия для дверей
 const mysteriousNames = [
   "Дверь с резным драконом", "Дверь в тени портьеры", "Дверь с серебряной ручкой",
   "Дверь, увитая плющом", "Дверь с зеркалом", "Дверь за гобеленом",
@@ -364,24 +365,20 @@ function shuffle(arr) {
 }
 
 function generateDoors() {
-  // Определяем сколько перерывов: 0 или 1 (не больше одного)
   const breakCount = Math.random() < 0.4 ? 1 : 0;
   const workCount = 3 - breakCount;
 
   const selected = [];
 
-  // Выбираем рабочие двери
   const workPool = shuffle(workDoors);
   for (let i = 0; i < workCount; i++) {
     selected.push({ type: 'work', data: workPool[i] });
   }
-  // Перерывные
   if (breakCount > 0) {
     const breakPool = shuffle(breakDoors);
     selected.push({ type: 'break', data: breakPool[0] });
   }
 
-  // Перемешиваем и добавляем загадочные названия
   const shuffled = shuffle(selected);
   const names = shuffle(mysteriousNames);
   const riddles = shuffle(mysteriousRiddles);
@@ -410,7 +407,6 @@ function chooseDoor(door) {
   currentRemainingMs = currentDurationMs;
   timerRunning = false;
 
-  // Настраиваем экран таймера
   const badge = document.getElementById('status-badge');
   if (isBreak) {
     badge.className = 'status-badge badge-break';
@@ -425,7 +421,6 @@ function chooseDoor(door) {
   document.getElementById('timer-display').textContent = fmt(currentDurationMs);
   document.getElementById('timer-display').classList.remove('paused');
 
-  // Кнопки
   document.getElementById('start-btn').classList.remove('hidden');
   document.getElementById('pause-btn').classList.add('hidden');
   document.getElementById('resume-btn').classList.add('hidden');
@@ -490,7 +485,6 @@ function resumeTimer() {
 
 // ===== ЗАВЕРШЕНИЕ ТАЙМЕРА =====
 function finishTimer() {
-  // Показываем модалку
   const emoji = document.getElementById('modal-emoji');
   const title = document.getElementById('modal-title');
   const desc = document.getElementById('modal-desc');
@@ -511,13 +505,10 @@ function finishTimer() {
 function closeModal() {
   document.getElementById('result-modal').classList.remove('show');
 
-  // Проверяем, не вышло ли общее время
   if (elapsedMs >= totalMs) {
-    // Выход!
     document.getElementById('total-final').textContent = fmt(totalMs);
     showScreen('exit-screen');
   } else {
-    // Снова двери
     showScreen('doors-screen');
     renderDoors();
   }
